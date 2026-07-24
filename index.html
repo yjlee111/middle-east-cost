@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAE / KSA 아마존 진출 부대비용 계산기</title>
+<style>
+  :root{
+    --orange:#E8701A;
+    --orange-dark:#C85A0E;
+    --orange-light:#FBEADD;
+    --ink:#26221F;
+    --ink-soft:#5B564F;
+    --line:#E6DFD6;
+    --bg:#FBF8F4;
+    --card:#FFFFFF;
+    --green:#2E7D5B;
+    --red:#C0392B;
+    --blue:#2E5F8A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  .maker-badge{
+    display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;
+    padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.2px;margin-bottom:12px;
+  }
+  .maker-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--orange);}
+  header{margin-bottom:18px;}
+  header h1{font-size:22px;margin:0 0 6px;letter-spacing:-0.3px;}
+  header p{margin:0;color:var(--ink-soft);font-size:13.5px;line-height:1.6;}
+
+  .fx-bar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:12px 16px;margin:18px 0 4px;
+  }
+  .fx-bar .fx-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+  .fx-bar input{width:110px;padding:7px 8px;border:1px solid var(--line);border-radius:7px;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;}
+  .fx-bar .fx-hint{font-size:11.5px;color:#8B8478;}
+  .fx-update-btn{
+    padding:7px 12px;border-radius:7px;border:1px solid var(--orange);background:var(--orange-light);
+    color:var(--orange-dark);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;
+  }
+  .fx-update-btn:disabled{opacity:.55;cursor:default;}
+  .fx-update-btn.err{border-color:var(--red);color:var(--red);background:#FBEAEA;}
+
+  .tabs{display:flex;gap:8px;margin:20px 0 16px;}
+  .tab-btn{
+    flex:1;padding:12px 16px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);cursor:pointer;font-size:15px;font-weight:600;color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;
+  }
+  .tab-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);box-shadow:0 4px 14px rgba(232,112,26,.25);}
+  .flag{width:20px;height:14px;border-radius:2px;display:inline-block;background-size:cover;}
+  .flag-uae{background:linear-gradient(180deg,#00843D 0 33%,#fff 33% 66%,#000 66% 100%);position:relative;}
+  .flag-ksa{background:#0B5D34;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start;}
+  @media (max-width:880px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:18px;}
+  .card h2{font-size:14.5px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .card h2 .num{width:20px;height:20px;border-radius:50%;background:var(--orange);color:#fff;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+  input[type=number], select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;
+    background:#fff;color:var(--ink);
+  }
+  input[type=number]:focus, select:focus{outline:2px solid var(--orange-light);border-color:var(--orange);}
+  .field{margin-bottom:14px;}
+  .radio-row{display:flex;gap:10px;margin-bottom:10px;}
+  .radio-opt{
+    flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:12.5px;
+    display:flex;align-items:center;gap:6px;color:var(--ink-soft);
+  }
+  .radio-opt.selected{border-color:var(--orange);background:var(--orange-light);color:var(--orange-dark);font-weight:700;}
+  .radio-opt input{width:auto;margin:0;}
+  .hint{font-size:11.5px;color:#8B8478;margin-top:4px;line-height:1.5;}
+  .invoice-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .invoice-row input{flex:1;}
+  .invoice-row .del{
+    flex-shrink:0;width:30px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;
+    color:var(--red);cursor:pointer;font-size:15px;line-height:1;
+  }
+  .add-btn{
+    width:100%;padding:9px;border-radius:8px;border:1px dashed var(--orange);background:var(--orange-light);
+    color:var(--orange-dark);font-weight:700;font-size:12.5px;cursor:pointer;margin-top:4px;
+  }
+  .result-card{background:linear-gradient(160deg,#2A2622,#3A342C);color:#fff;border-radius:14px;padding:22px;position:sticky;top:20px;}
+  .result-card h2{font-size:13px;color:#D8CFC2;margin:0 0 4px;font-weight:600;letter-spacing:.3px;}
+  .grand-total{font-size:28px;font-weight:800;margin:2px 0 4px;color:#FFB877;line-height:1.25;}
+  .grand-total .krw{font-size:15px;color:#E9DFCF;font-weight:700;display:block;margin-top:2px;}
+  .grand-total span.tag{font-size:13px;color:#D8CFC2;font-weight:500;}
+  .group-block{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14);}
+  .group-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .group-head .g-title{font-size:12.5px;font-weight:800;color:#FFD9B0;letter-spacing:.2px;}
+  .group-head .g-sub{font-size:10.5px;color:#93897A;}
+  .group-total{text-align:right;font-size:15px;font-weight:800;color:#fff;}
+  .group-total .krw{font-size:11px;color:#B7AD9E;font-weight:600;display:block;}
+  .breakdown-row{
+    display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08);
+    font-size:12.5px;
+  }
+  .breakdown-row:last-child{border-bottom:none;}
+  .breakdown-row .lbl{color:#D8CFC2;}
+  .breakdown-row .lbl small{display:block;color:#93897A;font-size:10.5px;margin-top:1px;}
+  .breakdown-row .val{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}
+  .breakdown-row .val .krw{display:block;font-size:10.5px;color:#B7AD9E;font-weight:600;margin-top:1px;}
+  .note{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.18);font-size:11px;color:#A79E90;line-height:1.7;}
+  table.ref{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.ref th, table.ref td{border:1px solid var(--line);padding:8px 10px;text-align:left;}
+  table.ref th{background:var(--orange-light);color:var(--orange-dark);font-weight:700;font-size:12px;}
+  table.ref td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .ref-wrap{overflow-x:auto;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;background:var(--orange-light);color:var(--orange-dark);font-size:11px;font-weight:700;margin-left:6px;}
+  .section-title{font-size:15px;font-weight:800;margin:34px 0 12px;padding-top:14px;border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="maker-badge"><span class="dot"></span> 사업기획팀 제작</div>
+  <header>
+    <h1>UAE / KSA 아마존 진출 부대비용 계산기</h1>
+    <p>IOR·VAT·제품등록 원스톱 서비스 견적 기반 &nbsp;·&nbsp; SKU 수량과 인보이스 금액을 입력하면 최종 부대비용이 자동 산출됩니다.</p>
+  </header>
+
+  <div class="fx-bar">
+    <span class="fx-label">💱 적용 환율 (USD→KRW)</span>
+    <input type="number" id="fx-rate" min="0" step="0.01" value="1473" oninput="onManualFxEdit()">
+    <button id="fx-update-btn" class="fx-update-btn" onclick="updateFxRate()">🔄 실시간 업데이트</button>
+    <span class="fx-hint" id="fx-status">₩ / $1 &nbsp;·&nbsp; 기준일: 2026-07-23 XE.com 매매기준율 참고 (수동 입력값 · "실시간 업데이트" 클릭 시 현재 환율로 갱신)</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-btn active" data-tab="uae" onclick="switchTab('uae')"><span class="flag flag-uae"></span> UAE</div>
+    <div class="tab-btn" data-tab="ksa" onclick="switchTab('ksa')"><span class="flag flag-ksa"></span> KSA (사우디)</div>
+  </div>
+
+  <!-- ===================== UAE PANEL ===================== -->
+  <div class="panel active" id="panel-uae">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h2><span class="num">1</span> 제품 등록 (DM, Dubai Municipality)</h2>
+          <div class="field">
+            <label>SKU 품목 수 (수량 아님, 품목 개수)</label>
+            <input type="number" id="uae-sku" min="0" value="1" oninput="calcAll()">
+            <div class="hint">1 SKU당 $200 · 등록 소요 약 40영업일 · 인증 유효기간 5년(1회성 비용)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">2</span> VAT 등록 (Federal Tax Authority)</h2>
+          <div class="field">
+            <label>선납 연차 수</label>
+            <input type="number" id="uae-years" min="0" value="1" oninput="calcAll()">
+          </div>
+          <div class="hint">VAT 최초 등록비 $255 (1회성) + 연간 신고대행비 $1,600/년 · VAT율 5% · 신고 주기 3개월<br>※ KSA와 동일한 요금 구조로 확인됨 (분기별 신고 항목 없음)</div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">3</span> IOR 서비스 (인보이스별 입력)</h2>
+          <div id="uae-invoice-list"></div>
+          <button class="add-btn" onclick="addInvoice('uae')">+ 인보이스 추가</button>
+          <div class="hint">IOR 수수료 = 인보이스 금액 × 3% (건당 최소 $200) · 수입 관세 5% · 수입 VAT 5% (인보이스 금액 기준, 통관 시 별도 납부)<br>※ 참고: 인보이스 금액은 통상 아마존 판매가(RRP)의 70% 수준</div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <h2>UAE 최종 부대비용</h2>
+        <div class="grand-total"><span class="tag">합계</span><br>$<span id="uae-grand">0</span><span class="krw">₩ <span id="uae-grand-krw">0</span></span></div>
+
+        <div class="group-block">
+          <div class="group-head">
+            <div>
+              <div class="g-title">📌 연간 발생 비용</div>
+              <div class="g-sub">제품 등록비 + VAT 등록비 (등록성 고정비용)</div>
+            </div>
+            <div class="group-total">$<span id="uae-group-annual">0</span><span class="krw">₩ <span id="uae-group-annual-krw">0</span></span></div>
+          </div>
+          <div class="breakdown-row"><div class="lbl">① 제품 등록비<small>SKU 수 × $200 (1회성, 5년 유효)</small></div><div class="val">$<span id="uae-out-reg">0</span><span class="krw">₩ <span id="uae-out-reg-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">② VAT 등록/신고 대행비<small>최초 $255 + 연간대행비 $1,600×연차수</small></div><div class="val">$<span id="uae-out-vat">0</span><span class="krw">₩ <span id="uae-out-vat-krw">0</span></span></div></div>
+        </div>
+
+        <div class="group-block">
+          <div class="group-head">
+            <div>
+              <div class="g-title">🔁 수시 발생 비용</div>
+              <div class="g-sub">IOR 수수료 + 수입 관세 + 수입 VAT (선적·통관 건별)</div>
+            </div>
+            <div class="group-total">$<span id="uae-group-adhoc">0</span><span class="krw">₩ <span id="uae-group-adhoc-krw">0</span></span></div>
+          </div>
+          <div class="breakdown-row"><div class="lbl">③ IOR 서비스 수수료<small>인보이스 합계 × 3% (최소 $200/건)</small></div><div class="val">$<span id="uae-out-ior">0</span><span class="krw">₩ <span id="uae-out-ior-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">④ 수입 관세 (5%)<small>통관 시 정부 납부</small></div><div class="val">$<span id="uae-out-duty">0</span><span class="krw">₩ <span id="uae-out-duty-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">⑤ 수입 VAT (5%)<small>통관 시 정부 납부</small></div><div class="val">$<span id="uae-out-ivat">0</span><span class="krw">₩ <span id="uae-out-ivat-krw">0</span></span></div></div>
+        </div>
+
+        <div class="note">① 제품등록비는 SKU 품목 수 기준이며 주문 수량과 무관합니다(1회성, 5년 유효 → 편의상 "연간" 그룹에 포함). ②는 최초등록비(1회) + 연간 신고대행비(매년)가 합산되어 발생합니다. ③~⑤는 선적/통관이 발생할 때마다 건별로 발생하는 수시 비용입니다. 원화 환산은 상단 환율 기준입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== KSA PANEL ===================== -->
+  <div class="panel" id="panel-ksa">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h2><span class="num">1</span> 제품 등록 (SFDA)</h2>
+          <div class="field">
+            <label>SKU 품목 수 (수량 아님, 품목 개수)</label>
+            <input type="number" id="ksa-sku" min="0" value="1" oninput="calcAll()">
+            <div class="hint">1 SKU당 $200 · 등록 소요 약 30영업일 · 인증 유효기간 5년(1회성 비용)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">2</span> VAT 등록 (Zakat, Tax and Customs Authority)</h2>
+          <div class="field">
+            <label>선납 연차 수</label>
+            <input type="number" id="ksa-years" min="0" value="1" oninput="calcAll()">
+          </div>
+          <div class="hint">VAT 최초 등록비 $255 (1회성) + 연간 신고(선납) $1,600/년 · VAT율 15% · 신고 주기 3개월<br>※ 견적서 상 분기별 신고 옵션은 별도 제시되지 않음 (연간 선납만 안내)</div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">3</span> IOR 서비스 (인보이스별 입력)</h2>
+          <div id="ksa-invoice-list"></div>
+          <button class="add-btn" onclick="addInvoice('ksa')">+ 인보이스 추가</button>
+          <div class="hint">IOR 수수료 = 인보이스 금액 × 4% (건당 최소 $200) · 수입 관세 5% · 수입 VAT 15% (인보이스 금액 기준, 통관 시 별도 납부)<br>※ 참고: 인보이스 금액은 통상 아마존 판매가(RRP)의 40% 수준</div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <h2>KSA 최종 부대비용</h2>
+        <div class="grand-total"><span class="tag">합계</span><br>$<span id="ksa-grand">0</span><span class="krw">₩ <span id="ksa-grand-krw">0</span></span></div>
+
+        <div class="group-block">
+          <div class="group-head">
+            <div>
+              <div class="g-title">📌 연간 발생 비용</div>
+              <div class="g-sub">제품 등록비 + VAT 등록비 (등록성 고정비용)</div>
+            </div>
+            <div class="group-total">$<span id="ksa-group-annual">0</span><span class="krw">₩ <span id="ksa-group-annual-krw">0</span></span></div>
+          </div>
+          <div class="breakdown-row"><div class="lbl">① 제품 등록비<small>SKU 수 × $200 (1회성, 5년 유효)</small></div><div class="val">$<span id="ksa-out-reg">0</span><span class="krw">₩ <span id="ksa-out-reg-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">② VAT 등록/신고 서비스료<small>최초 $255 + 연간선납</small></div><div class="val">$<span id="ksa-out-vat">0</span><span class="krw">₩ <span id="ksa-out-vat-krw">0</span></span></div></div>
+        </div>
+
+        <div class="group-block">
+          <div class="group-head">
+            <div>
+              <div class="g-title">🔁 수시 발생 비용</div>
+              <div class="g-sub">IOR 수수료 + 수입 관세 + 수입 VAT (선적·통관 건별)</div>
+            </div>
+            <div class="group-total">$<span id="ksa-group-adhoc">0</span><span class="krw">₩ <span id="ksa-group-adhoc-krw">0</span></span></div>
+          </div>
+          <div class="breakdown-row"><div class="lbl">③ IOR 서비스 수수료<small>인보이스 합계 × 4% (최소 $200/건)</small></div><div class="val">$<span id="ksa-out-ior">0</span><span class="krw">₩ <span id="ksa-out-ior-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">④ 수입 관세 (5%)<small>통관 시 정부 납부</small></div><div class="val">$<span id="ksa-out-duty">0</span><span class="krw">₩ <span id="ksa-out-duty-krw">0</span></span></div></div>
+          <div class="breakdown-row"><div class="lbl">⑤ 수입 VAT (15%)<small>통관 시 정부 납부</small></div><div class="val">$<span id="ksa-out-ivat">0</span><span class="krw">₩ <span id="ksa-out-ivat-krw">0</span></span></div></div>
+        </div>
+
+        <div class="note">① 제품등록비는 SKU 품목 수 기준이며 주문 수량과 무관합니다(1회성, 5년 유효 → 편의상 "연간" 그룹에 포함). ②는 매 신고 주기마다 발생, ③~⑤는 선적/통관이 발생할 때마다 건별로 발생하는 수시 비용입니다. 원화 환산은 상단 환율 기준입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 원본 견적 정리표 ===================== -->
+  <div class="section-title">📋 원본 견적 정리 (참고용) <span class="badge">8~13페이지</span></div>
+  <div class="card ref-wrap">
+    <table class="ref">
+      <thead>
+        <tr><th>구분</th><th>항목</th><th>UAE</th><th>KSA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="3">제품 등록</td><td>담당 기관</td><td>DM (Dubai Municipality)</td><td>SFDA</td></tr>
+        <tr><td>비용</td><td class="num">$200 / SKU</td><td class="num">$200 / SKU</td></tr>
+        <tr><td>소요기간 / 유효기간</td><td>약 40영업일 / 5년</td><td>약 30영업일 / 5년</td></tr>
+        <tr><td rowspan="4">VAT 등록</td><td>담당 기관</td><td>Federal Tax Authority</td><td>Zakat, Tax and Customs Authority</td></tr>
+        <tr><td>VAT 세율</td><td class="num">5%</td><td class="num">15%</td></tr>
+        <tr><td>최초 등록비</td><td class="num">$255</td><td class="num">$255</td></tr>
+        <tr><td>연간 신고대행비</td><td class="num">$1,600 / 년</td><td class="num">$1,600 / 년</td></tr>
+        <tr><td rowspan="4">IOR 서비스</td><td>IOR 수수료</td><td class="num">인보이스 금액 × 3%</td><td class="num">인보이스 금액 × 4%</td></tr>
+        <tr><td>인보이스 산정 기준</td><td>Amazon RRP × 70%</td><td>Amazon RRP × 40%</td></tr>
+        <tr><td>IOR 최소 비용</td><td class="num">$200</td><td class="num">$200</td></tr>
+        <tr><td>통관 시 관세/VAT</td><td>관세 5% + VAT 5%</td><td>관세 5% + VAT 15%</td></tr>
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:10px;">※ 업체 확인 결과 VAT 등록비용은 UAE·KSA 동일 구조로 확정: 최초 등록비 $255(1회) + 연간 신고대행비 $1,600/년 → 국가당 $1,855, 2개국 합산 시 $3,710 (SKU 1개, 1년 기준 / IOR·통관 비용 별도)</div>
+  </div>
+</div>
+
+<script>
+let invoiceData = { uae: [], ksa: [] };
+
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+}
+
+function addInvoice(country, value){
+  const id = 'inv_' + Math.random().toString(36).slice(2,9);
+  invoiceData[country].push(id);
+  const row = document.createElement('div');
+  row.className = 'invoice-row';
+  row.id = 'row_'+id;
+  row.innerHTML = `
+    <input type="number" min="0" placeholder="인보이스 금액 (USD)" value="${value!==undefined?value:''}" oninput="calcAll()" id="${id}">
+    <button class="del" onclick="removeInvoice('${country}','${id}')">×</button>
+  `;
+  document.getElementById(country+'-invoice-list').appendChild(row);
+  calcAll();
+}
+
+function removeInvoice(country, id){
+  invoiceData[country] = invoiceData[country].filter(x=>x!==id);
+  const el = document.getElementById('row_'+id);
+  if(el) el.remove();
+  calcAll();
+}
+
+function fmt(n){
+  return Math.round(n).toLocaleString('en-US');
+}
+
+function fxRate(){
+  const v = parseFloat(document.getElementById('fx-rate').value);
+  return isNaN(v) || v<=0 ? 0 : v;
+}
+
+function onManualFxEdit(){
+  const statusEl = document.getElementById('fx-status');
+  statusEl.textContent = '₩ / $1 · 수동 입력값 (실시간 업데이트 버튼을 눌러 현재 환율로 갱신 가능)';
+  calcAll();
+}
+
+async function updateFxRate(){
+  const btn = document.getElementById('fx-update-btn');
+  const statusEl = document.getElementById('fx-status');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.classList.remove('err');
+  btn.textContent = '⏳ 조회 중...';
+  statusEl.textContent = '환율 조회 중입니다...';
+
+  // 1차: open.er-api.com, 실패 시 2차: frankfurter.app 로 폴백
+  const providers = [
+    {
+      url: 'https://open.er-api.com/v6/latest/USD',
+      parse: (d) => d && d.rates ? d.rates.KRW : null
+    },
+    {
+      url: 'https://api.frankfurter.app/latest?from=USD&to=KRW',
+      parse: (d) => d && d.rates ? d.rates.KRW : null
+    }
+  ];
+
+  let rate = null, source = null;
+  for(const p of providers){
+    try{
+      const res = await fetch(p.url, {cache:'no-store'});
+      if(!res.ok) continue;
+      const data = await res.json();
+      const r = p.parse(data);
+      if(r && r > 0){ rate = r; source = p.url; break; }
+    }catch(e){ /* 다음 provider로 폴백 */ }
+  }
+
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+
+  if(rate){
+    document.getElementById('fx-rate').value = Math.round(rate * 100) / 100;
+    const now = new Date();
+    const stamp = now.toLocaleString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    statusEl.textContent = `₩ / $1 · 실시간 환율 갱신 완료 (${stamp} 기준, ${source.includes('frankfurter') ? 'frankfurter.app' : 'exchangerate-api'})`;
+    calcAll();
+  } else {
+    btn.classList.add('err');
+    statusEl.textContent = '환율 조회 실패 — 네트워크 상태를 확인하시거나, 환율 값을 직접 입력해주세요.';
+  }
+}
+
+function setUsdKrw(usdId, krwId, usdValue){
+  document.getElementById(usdId).textContent = fmt(usdValue);
+  document.getElementById(krwId).textContent = fmt(usdValue * fxRate());
+}
+
+function sumInvoices(country){
+  return invoiceData[country].reduce((sum, id)=>{
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(el.value) : 0;
+    return sum + (isNaN(v) ? 0 : v);
+  }, 0);
+}
+
+function iorFeeTotal(country, rate){
+  return invoiceData[country].reduce((sum, id)=>{
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(el.value) : 0;
+    const amt = isNaN(v) ? 0 : v;
+    if(amt <= 0) return sum;
+    return sum + Math.max(amt*rate, 200);
+  }, 0);
+}
+
+function calcAll(){
+  // UAE
+  const uaeSku = parseFloat(document.getElementById('uae-sku').value) || 0;
+  const uaeReg = uaeSku * 200;
+
+  const uaeYears = parseFloat(document.getElementById('uae-years').value) || 0;
+  // VAT: 최초등록 $255(1회) + 연간 신고대행비 $1,600×연차수 (KSA와 동일 구조로 통일)
+  const uaeVat = 255 + (uaeYears * 1600);
+
+  const uaeInvSum = sumInvoices('uae');
+  const uaeIor = iorFeeTotal('uae', 0.03);
+  const uaeDuty = uaeInvSum * 0.05;
+  const uaeImportVat = uaeInvSum * 0.05;
+
+  const uaeAnnual = uaeReg + uaeVat;
+  const uaeAdhoc = uaeIor + uaeDuty + uaeImportVat;
+  const uaeGrand = uaeAnnual + uaeAdhoc;
+
+  setUsdKrw('uae-out-reg','uae-out-reg-krw', uaeReg);
+  setUsdKrw('uae-out-vat','uae-out-vat-krw', uaeVat);
+  setUsdKrw('uae-out-ior','uae-out-ior-krw', uaeIor);
+  setUsdKrw('uae-out-duty','uae-out-duty-krw', uaeDuty);
+  setUsdKrw('uae-out-ivat','uae-out-ivat-krw', uaeImportVat);
+  setUsdKrw('uae-group-annual','uae-group-annual-krw', uaeAnnual);
+  setUsdKrw('uae-group-adhoc','uae-group-adhoc-krw', uaeAdhoc);
+  setUsdKrw('uae-grand','uae-grand-krw', uaeGrand);
+
+  // KSA
+  const ksaSku = parseFloat(document.getElementById('ksa-sku').value) || 0;
+  const ksaReg = ksaSku * 200;
+
+  const ksaYears = parseFloat(document.getElementById('ksa-years').value) || 0;
+  const ksaVat = 255 + ksaYears * 1600;
+
+  const ksaInvSum = sumInvoices('ksa');
+  const ksaIor = iorFeeTotal('ksa', 0.04);
+  const ksaDuty = ksaInvSum * 0.05;
+  const ksaImportVat = ksaInvSum * 0.15;
+
+  const ksaAnnual = ksaReg + ksaVat;
+  const ksaAdhoc = ksaIor + ksaDuty + ksaImportVat;
+  const ksaGrand = ksaAnnual + ksaAdhoc;
+
+  setUsdKrw('ksa-out-reg','ksa-out-reg-krw', ksaReg);
+  setUsdKrw('ksa-out-vat','ksa-out-vat-krw', ksaVat);
+  setUsdKrw('ksa-out-ior','ksa-out-ior-krw', ksaIor);
+  setUsdKrw('ksa-out-duty','ksa-out-duty-krw', ksaDuty);
+  setUsdKrw('ksa-out-ivat','ksa-out-ivat-krw', ksaImportVat);
+  setUsdKrw('ksa-group-annual','ksa-group-annual-krw', ksaAnnual);
+  setUsdKrw('ksa-group-adhoc','ksa-group-adhoc-krw', ksaAdhoc);
+  setUsdKrw('ksa-grand','ksa-grand-krw', ksaGrand);
+}
+
+// init with one sample invoice row each
+addInvoice('uae', 5000);
+addInvoice('ksa', 5000);
+calcAll();
+</script>
+</body>
+</html>
